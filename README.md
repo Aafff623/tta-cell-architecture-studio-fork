@@ -1,5 +1,4 @@
 # Cell Architecture Studio
-<!--  -->
 
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=111)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=fff)
