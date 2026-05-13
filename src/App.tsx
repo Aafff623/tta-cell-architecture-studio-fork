@@ -23,24 +23,73 @@ import {
   Target,
   type LucideIcon,
 } from "lucide-react";
+import type { TFunction } from "i18next";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { CellScene } from "./components/CellScene";
-import { cells, getCellById, type CellItem, type ViewMode } from "./data/cells";
+import { cells, getCellById, type CellItem, type OrganelleItem, type ViewMode } from "./data/cells";
 
 type ModeOption = {
   id: ViewMode;
-  label: string;
+  labelKey: string;
   Icon: LucideIcon;
 };
 
 const modeOptions: ModeOption[] = [
-  { id: "mesh", label: "Mesh", Icon: Box },
-  { id: "focus", label: "Focus", Icon: CircleDot },
+  { id: "mesh", labelKey: "app.controls.mesh", Icon: Box },
+  { id: "focus", labelKey: "app.controls.focus", Icon: CircleDot },
 ];
 
 const initialCell = getCellById("animal");
 
+function translateCell(cell: CellItem, t: TFunction): CellItem {
+  return {
+    ...cell,
+    name: t(`cells.${cell.id}.name`, { defaultValue: cell.name }),
+    type: t(`cells.${cell.id}.type`, { defaultValue: cell.type }),
+    occurrence: {
+      ...cell.occurrence,
+      title: t(`cells.${cell.id}.occurrence.title`, { defaultValue: cell.occurrence.title }),
+      body: t(`cells.${cell.id}.occurrence.body`, { defaultValue: cell.occurrence.body }),
+    },
+    microscope: cell.microscope.map((image) => ({
+      ...image,
+      label: t(`microscope.${image.label}`, { defaultValue: image.label }),
+    })),
+    organelles: cell.organelles.map((organelle) => ({
+      ...organelle,
+      name: t(`cells.${cell.id}.organelles.${organelle.id}.name`, { defaultValue: organelle.name }),
+      subtitle: t(`cells.${cell.id}.organelles.${organelle.id}.subtitle`, { defaultValue: organelle.subtitle }),
+      note: t(`cells.${cell.id}.organelles.${organelle.id}.note`, { defaultValue: organelle.note }),
+      fact: t(`cells.${cell.id}.organelles.${organelle.id}.fact`, { defaultValue: organelle.fact }),
+      attributes: organelle.attributes.map((item) => ({
+        label: t(`attributes.${item.label}`, { defaultValue: item.label }),
+        value: t(`attributeValues.${item.value}`, { defaultValue: item.value }),
+      })),
+    })),
+  };
+}
+
+type TutorPromptId = "survival" | "quiz" | "guide";
+
+function buildTutorPrompt(
+  promptId: TutorPromptId,
+  t: TFunction,
+  cell: CellItem,
+  organelle: OrganelleItem,
+  comparison: CellItem,
+) {
+  return t(`app.tutorPrompts.${promptId}`, {
+    cell: cell.name,
+    organelle: organelle.name,
+    comparison: comparison.name,
+  });
+}
+
 function Header({ cell }: { cell: CellItem }) {
+  const { i18n, t } = useTranslation();
+  const nextLanguage = i18n.language === "zh" ? "en" : "zh";
+
   return (
     <header className="topbar">
       <div className="brand-block">
@@ -49,28 +98,37 @@ function Header({ cell }: { cell: CellItem }) {
         </div>
         <div>
           <h1>Cell Architecture Studio</h1>
-          <p>Explore life at the microscopic level</p>
+          <p>{t("app.tagline")}</p>
         </div>
       </div>
 
-      <nav className="top-nav" aria-label="Primary">
+      <nav className="top-nav" aria-label={t("app.nav.primary")}>
         <a href="#gallery">
           <Grid3X3 size={24} />
-          <span>Gallery</span>
+          <span>{t("app.nav.gallery")}</span>
         </a>
         <a href="#library">
           <Library size={24} />
-          <span>Library</span>
+          <span>{t("app.nav.library")}</span>
         </a>
         <a href="#notebooks">
           <BookOpen size={24} />
-          <span>Notebooks</span>
+          <span>{t("app.nav.notebooks")}</span>
         </a>
         <a href="#settings">
           <Settings size={24} />
-          <span>Settings</span>
+          <span>{t("app.nav.settings")}</span>
         </a>
-        <button className="avatar-button" type="button" aria-label="User menu">
+        <button
+          className="language-switch"
+          type="button"
+          aria-label={t("app.language.switchTo", { language: nextLanguage })}
+          onClick={() => i18n.changeLanguage(nextLanguage)}
+        >
+          <span className={i18n.language === "en" ? "is-active" : ""}>en</span>
+          <span className={i18n.language === "zh" ? "is-active" : ""}>zh</span>
+        </button>
+        <button className="avatar-button" type="button" aria-label={t("app.nav.userMenu")}>
           <span className="avatar-core" style={{ background: cell.accentSoft }}>
             <span style={{ background: cell.accent }} />
           </span>
@@ -124,19 +182,22 @@ function Sidebar({
   onSelectOrganelle,
   onToggleFavorite,
 }: SidebarProps) {
+  const { t } = useTranslation();
+  const translatedCells = cells.map((cell) => translateCell(cell, t));
+
   return (
     <aside className="left-rail">
       <section className="panel cell-type-panel">
         <div className="panel-heading">
           <span>
             <Leaf size={18} />
-            Cell Types
+            {t("app.panels.cellTypes")}
           </span>
           <ChevronDown size={18} />
         </div>
 
         <div className="cell-list">
-          {cells.map((cell) => {
+          {translatedCells.map((cell) => {
             const selected = selectedCell.id === cell.id;
             return (
               <button
@@ -158,7 +219,7 @@ function Sidebar({
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Favorite ${cell.name}`}
+                  aria-label={t("app.controls.favoriteCell", { name: cell.name })}
                 >
                   <Star size={18} fill="currentColor" />
                 </span>
@@ -172,7 +233,7 @@ function Sidebar({
         <div className="panel-heading">
           <span>
             <Sparkles size={16} />
-            Organelles
+            {t("app.panels.organelles")}
           </span>
           <ChevronDown size={18} />
         </div>
@@ -222,6 +283,8 @@ function Stage({
   onReset,
   onToast,
 }: StageProps) {
+  const { t } = useTranslation();
+
   return (
     <main className="stage-column">
       <section className="stage-panel">
@@ -232,22 +295,22 @@ function Stage({
           </div>
 
           <div className="view-card">
-            <span>View Mode</span>
+            <span>{t("app.controls.viewMode")}</span>
             <div className="mode-switcher">
-              {modeOptions.map(({ id, label, Icon }) => (
+              {modeOptions.map(({ id, labelKey, Icon }) => (
                 <button
                   key={id}
                   type="button"
                   className={viewMode === id ? "is-active" : ""}
                   onClick={() => onModeChange(id)}
-                  title={label}
+                  title={t(labelKey)}
                 >
                   <Icon size={22} />
                 </button>
               ))}
             </div>
             <label className="toggle-line">
-              <span>Cross Section</span>
+              <span>{t("app.controls.crossSection")}</span>
               <input
                 type="checkbox"
                 checked={crossSection}
@@ -276,30 +339,30 @@ function Stage({
             onClick={() => onAutoRotateChange(!autoRotate)}
           >
             <RotateCcw size={20} />
-            Rotate
+            {t("app.controls.rotate")}
           </button>
           <button type="button" onClick={() => onModeChange("focus")}>
             <CircleDot size={20} />
-            Isolate
+            {t("app.controls.isolate")}
           </button>
           <button type="button" onClick={() => onModeChange("focus")}>
             <EyeOff size={20} />
-            Hide Others
+            {t("app.controls.hideOthers")}
           </button>
           <button type="button" onClick={onReset}>
             <RotateCcw size={20} />
-            Reset View
+            {t("app.controls.resetView")}
           </button>
         </div>
 
         <div className="export-toolbar">
-          <button type="button" onClick={() => onToast("截图功能这里先做占位。")}>
+          <button type="button" onClick={() => onToast(t("app.toasts.screenshotPlaceholder"))}>
             <Camera size={20} />
-            Screenshot
+            {t("app.controls.screenshot")}
           </button>
-          <button type="button" onClick={() => onToast("GLB 导出需要接入模型导出管线。")}>
+          <button type="button" onClick={() => onToast(t("app.toasts.glbPlaceholder"))}>
             <Box size={20} />
-            GLB Export
+            {t("app.controls.glbExport")}
           </button>
         </div>
       </section>
@@ -315,18 +378,10 @@ type RightPanelProps = {
   viewedCellCount: number;
   viewedOrganelleCount: number;
   totalOrganelleCount: number;
-  tutorPrompt: string;
+  tutorPromptId: TutorPromptId;
   onToggleFavorite: (id: string) => void;
-  onTutorPrompt: (prompt: string) => void;
+  onTutorPrompt: (promptId: TutorPromptId) => void;
 };
-
-function buildTutorPrompts(cell: CellItem, organelle: CellItem["organelles"][number]) {
-  return [
-    `Explain how ${organelle.name} helps a ${cell.name} stay alive.`,
-    `Quiz me on the visual differences between ${cell.name} and ${getCellById(cell.comparison).name}.`,
-    `Guide me through finding ${organelle.name} inside the 3D model.`,
-  ];
-}
 
 function RightPanel({
   cell,
@@ -336,19 +391,22 @@ function RightPanel({
   viewedCellCount,
   viewedOrganelleCount,
   totalOrganelleCount,
-  tutorPrompt,
+  tutorPromptId,
   onToggleFavorite,
   onTutorPrompt,
 }: RightPanelProps) {
+  const { t } = useTranslation();
   const organelle = cell.organelles.find((item) => item.id === activeOrganelle) ?? cell.organelles[0];
-  const tutorPrompts = buildTutorPrompts(cell, organelle);
+  const comparedCell = translateCell(getCellById(cell.comparison), t);
+  const tutorPromptIds: TutorPromptId[] = ["survival", "quiz", "guide"];
+  const tutorPrompt = buildTutorPrompt(tutorPromptId, t, cell, organelle, comparedCell);
 
   return (
     <aside className="right-rail">
       <section className="panel details-panel">
         <div className="panel-heading detail-heading">
-          <span>Organelle Details</span>
-          <button type="button" onClick={() => onToggleFavorite(cell.id)} aria-label="Toggle favorite">
+          <span>{t("app.panels.organelleDetails")}</span>
+          <button type="button" onClick={() => onToggleFavorite(cell.id)} aria-label={t("app.controls.toggleFavorite")}>
             <Heart size={22} fill={favorites.has(cell.id) ? "currentColor" : "none"} />
           </button>
         </div>
@@ -369,7 +427,7 @@ function RightPanel({
             </div>
           ))}
           <div>
-            <dt>Label</dt>
+            <dt>{t("app.details.label")}</dt>
             <dd>
               <span className="mini-toggle is-on" />
               <span className="detail-dot" style={{ background: organelle.color }} />
@@ -380,11 +438,11 @@ function RightPanel({
 
       <section className="panel notes-panel">
         <div className="panel-heading">
-          <span>Biological Notes</span>
+          <span>{t("app.panels.biologicalNotes")}</span>
         </div>
         <p>{organelle.note}</p>
         <div className="fun-fact">
-          <span>Fun Fact: {organelle.fact}</span>
+          <span>{t("app.details.funFact", { fact: organelle.fact })}</span>
           <Sparkles size={18} />
         </div>
       </section>
@@ -393,47 +451,55 @@ function RightPanel({
         <div className="panel-heading">
           <span>
             <Brain size={17} />
-            AI Tutor
+            {t("app.panels.aiTutor")}
           </span>
         </div>
 
         <div className="mastery-meter" style={{ "--progress": `${mastery}%` } as CSSProperties}>
           <div>
             <Gauge size={18} />
-            <span>Mastery</span>
+            <span>{t("app.details.mastery")}</span>
             <strong>{mastery}%</strong>
           </div>
           <i>
             <b />
           </i>
           <small>
-            {viewedCellCount}/{cells.length} cells explored · {viewedOrganelleCount}/{totalOrganelleCount} organelles inspected
+            {t("app.details.progress", {
+              viewedCellCount,
+              cellCount: cells.length,
+              viewedOrganelleCount,
+              totalOrganelleCount,
+            })}
           </small>
         </div>
 
         <div className="lesson-focus">
           <span>
             <Target size={17} />
-            Current lesson focus
+            {t("app.details.currentLessonFocus")}
           </span>
           <p>
-            Locate <strong>{organelle.name}</strong>, explain its role, then compare it with the matching structure in{" "}
-            {getCellById(cell.comparison).name}.
+            <Trans
+              i18nKey="app.details.lessonFocus"
+              values={{ organelle: organelle.name, comparison: comparedCell.name }}
+              components={{ strong: <strong /> }}
+            />
           </p>
         </div>
 
         <div className="tutor-prompt">
           <span>
             <MessageCircle size={17} />
-            Prompt staged for AI tutor
+            {t("app.details.promptStaged")}
           </span>
           <p>{tutorPrompt}</p>
         </div>
 
         <div className="prompt-list">
-          {tutorPrompts.map((prompt) => (
-            <button type="button" key={prompt} onClick={() => onTutorPrompt(prompt)}>
-              {prompt}
+          {tutorPromptIds.map((promptId) => (
+            <button type="button" key={promptId} onClick={() => onTutorPrompt(promptId)}>
+              {buildTutorPrompt(promptId, t, cell, organelle, comparedCell)}
             </button>
           ))}
         </div>
@@ -441,7 +507,7 @@ function RightPanel({
 
       <section className="panel occurrence-panel">
         <div className="panel-heading">
-          <span>Where It Occurs</span>
+          <span>{t("app.panels.whereItOccurs")}</span>
         </div>
         <div className={`occurrence-art occurrence-${cell.occurrence.motif}`}>
           <span />
@@ -462,14 +528,15 @@ type BottomPanelsProps = {
 };
 
 function BottomPanels({ cell, onCompare, onToast }: BottomPanelsProps) {
-  const comparedCell = getCellById(cell.comparison);
+  const { t } = useTranslation();
+  const comparedCell = translateCell(getCellById(cell.comparison), t);
 
   return (
     <section className="bottom-grid">
       <div className="panel microscope-panel">
         <div className="panel-heading">
           <span>
-            Microscope View
+            {t("app.panels.microscopeView")}
             <Info size={16} />
           </span>
         </div>
@@ -480,15 +547,15 @@ function BottomPanels({ cell, onCompare, onToast }: BottomPanelsProps) {
               key={image.label}
               className={`micro-card pattern-${image.pattern}`}
               style={{ "--micro": image.tone } as CSSProperties}
-              onClick={() => onToast(`${image.label} selected.`)}
+              onClick={() => onToast(t("app.toasts.imageSelected", { label: image.label }))}
             >
               <span />
               <strong>{image.label}</strong>
             </button>
           ))}
-          <button type="button" className="micro-card add-card" onClick={() => onToast("Image upload is a planned step.")}>
+          <button type="button" className="micro-card add-card" onClick={() => onToast(t("app.toasts.imageUploadPlanned"))}>
             <Plus size={28} />
-            <strong>Add Image</strong>
+            <strong>{t("app.controls.addImage")}</strong>
           </button>
         </div>
       </div>
@@ -496,7 +563,7 @@ function BottomPanels({ cell, onCompare, onToast }: BottomPanelsProps) {
       <div className="panel compare-panel">
         <div className="panel-heading">
           <span>
-            Compare Cells
+            {t("app.panels.compareCells")}
             <Info size={16} />
           </span>
         </div>
@@ -505,10 +572,10 @@ function BottomPanels({ cell, onCompare, onToast }: BottomPanelsProps) {
             <MiniCell cell={cell} />
             <span>
               <strong>{cell.name}</strong>
-              <em>You are here</em>
+              <em>{t("app.details.youAreHere")}</em>
             </span>
           </div>
-          <b>VS</b>
+          <b>{t("app.details.versus")}</b>
           <div>
             <span>
               <strong>{comparedCell.name}</strong>
@@ -518,7 +585,7 @@ function BottomPanels({ cell, onCompare, onToast }: BottomPanelsProps) {
           </div>
         </div>
         <button type="button" className="comparison-button" onClick={onCompare}>
-          Open Comparison View
+          {t("app.controls.openComparisonView")}
           <ArrowRight size={20} />
         </button>
       </div>
@@ -533,7 +600,8 @@ type ComparisonModalProps = {
 };
 
 function ComparisonModal({ cell, open, onClose }: ComparisonModalProps) {
-  const comparedCell = getCellById(cell.comparison);
+  const { t } = useTranslation();
+  const comparedCell = translateCell(getCellById(cell.comparison), t);
   if (!open) {
     return null;
   }
@@ -543,16 +611,14 @@ function ComparisonModal({ cell, open, onClose }: ComparisonModalProps) {
     comparedCell.organelles.find((item) => item.id === comparedCell.defaultOrganelle) ?? comparedCell.organelles[0];
 
   return (
-    <div className="modal-layer" role="dialog" aria-modal="true" aria-label="Cell comparison">
+    <div className="modal-layer" role="dialog" aria-modal="true" aria-label={t("app.comparison.label")}>
       <div className="comparison-modal">
         <button className="modal-close" type="button" onClick={onClose}>
-          Close
+          {t("app.controls.close")}
         </button>
         <div className="comparison-modal-head">
-          <h3>Comparison View</h3>
-          <p>
-            {cell.name} compared with {comparedCell.name}
-          </p>
+          <h3>{t("app.comparison.title")}</h3>
+          <p>{t("app.comparison.subtitle", { cell: cell.name, comparison: comparedCell.name })}</p>
         </div>
         <div className="comparison-columns">
           {[cell, comparedCell].map((item) => {
@@ -564,15 +630,15 @@ function ComparisonModal({ cell, open, onClose }: ComparisonModalProps) {
                 <p>{item.type}</p>
                 <dl>
                   <div>
-                    <dt>Default focus</dt>
+                    <dt>{t("app.comparison.defaultFocus")}</dt>
                     <dd>{organelle.name}</dd>
                   </div>
                   <div>
-                    <dt>Main note</dt>
+                    <dt>{t("app.comparison.mainNote")}</dt>
                     <dd>{organelle.subtitle}</dd>
                   </div>
                   <div>
-                    <dt>Occurs in</dt>
+                    <dt>{t("app.comparison.occursIn")}</dt>
                     <dd>{item.occurrence.title}</dd>
                   </div>
                 </dl>
@@ -593,6 +659,7 @@ function Toast({ message }: { message: string | null }) {
 }
 
 export default function App() {
+  const { i18n, t } = useTranslation();
   const [selectedCellId, setSelectedCellId] = useState(initialCell.id);
   const [activeOrganelle, setActiveOrganelle] = useState(initialCell.defaultOrganelle);
   const [viewMode, setViewMode] = useState<ViewMode>("mesh");
@@ -605,13 +672,11 @@ export default function App() {
     () => new Set([`${initialCell.id}:${initialCell.defaultOrganelle}`]),
   );
   const [comparisonOpen, setComparisonOpen] = useState(false);
-  const [tutorPrompt, setTutorPrompt] = useState(
-    `Guide me through finding ${initialCell.organelles[0].name} inside the 3D model.`,
-  );
+  const [tutorPromptId, setTutorPromptId] = useState<TutorPromptId>("guide");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
-  const selectedCell = useMemo(() => getCellById(selectedCellId), [selectedCellId]);
+  const selectedCell = useMemo(() => translateCell(getCellById(selectedCellId), t), [i18n.language, selectedCellId, t]);
   const totalOrganelleCount = useMemo(
     () => cells.reduce((total, cell) => total + cell.organelles.length, 0),
     [],
@@ -693,7 +758,7 @@ export default function App() {
             onAutoRotateChange={setAutoRotate}
             onReset={() => {
               setResetKey((key) => key + 1);
-              showToast("View reset.");
+              showToast(t("app.toasts.viewReset"));
             }}
             onToast={showToast}
           />
@@ -712,11 +777,11 @@ export default function App() {
           viewedCellCount={viewedCells.size}
           viewedOrganelleCount={viewedOrganelleKeys.size}
           totalOrganelleCount={totalOrganelleCount}
-          tutorPrompt={tutorPrompt}
+          tutorPromptId={tutorPromptId}
           onToggleFavorite={toggleFavorite}
-          onTutorPrompt={(prompt) => {
-            setTutorPrompt(prompt);
-            showToast("AI tutor prompt staged.");
+          onTutorPrompt={(promptId) => {
+            setTutorPromptId(promptId);
+            showToast(t("app.toasts.tutorPromptStaged"));
           }}
         />
       </div>

@@ -122,7 +122,8 @@ a {
 }
 
 .top-nav a,
-.avatar-button {
+.avatar-button,
+.language-switch {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -145,6 +146,33 @@ a {
   padding: 4px;
   cursor: pointer;
   background: transparent;
+}
+
+.language-switch {
+  min-width: 78px;
+  padding: 5px;
+  border: 1px solid rgba(47, 42, 35, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow: 0 8px 20px rgba(78, 66, 48, 0.08);
+  cursor: pointer;
+}
+
+.language-switch span {
+  min-width: 30px;
+  padding: 4px 6px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.language-switch span.is-active {
+  color: #fff;
+  background: var(--accent);
 }
 
 .avatar-core {
