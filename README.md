@@ -10,45 +10,45 @@
 ![Status](https://img.shields.io/badge/status-local%20prototype-f59e0b)
 [![Live Demo](https://img.shields.io/badge/live-demo-16a34a)](https://cell-architecture-studio-inky.vercel.app)
 
-An interactive cell architecture gallery built with React, Vite, Three.js, and staged GLB or procedural 3D cell assets. The project recreates a premium educational biology interface with selectable cell types, organelle details, comparison mode, responsive layout, and visual verification coverage.
+基于 React + Three.js 的交互式 3D 细胞结构画廊，用于生物学教学与科普展示。项目使用 GLB 模型与程序化几何体构建高保真细胞视图，支持细胞类型选择、细胞器详情、对比模式、响应式布局及可视化验证。
 
-## Live Demo
+## 在线演示
 
-[Open the live Vercel deployment](https://cell-architecture-studio-inky.vercel.app)
+[打开 Vercel 在线部署](https://cell-architecture-studio-inky.vercel.app)
 
 [![Cell Architecture Studio demo](docs/media/cell-architecture-studio-demo.gif)](https://cell-architecture-studio-inky.vercel.app)
 
-[View the MP4 demo file](docs/media/cell-architecture-studio-demo.mp4)
+[查看 MP4 演示视频](docs/media/cell-architecture-studio-demo.mp4)
 
-## Highlights
+## 功能亮点
 
-- Seven specimen views: plant cell, white blood cell, neuron, epithelial cell, bacteria cell, animal cell, and muscle cell.
-- High fidelity Plant Cell and White Blood Cell GLB rendering with native texture preservation.
-- Mesh first experience with 3D canvas rendering as the default view.
-- AI Tutor panel with learning prompts, lesson focus, and mastery tracking.
-- Model loading overlay for large GLB assets on slower networks.
-- Procedural fallback geometry for specimens that do not yet have production GLB assets.
-- Detail panel for organelles, microscope modes, specimen metadata, and comparison workflow.
-- Responsive desktop, compact, and mobile layouts with browser screenshot verification.
+- 七种标本视图：植物细胞、白细胞、神经元、上皮细胞、细菌、动物细胞、肌肉细胞
+- 植物细胞与白细胞的高保真 GLB 渲染，保留原生纹理材质
+- 以 3D 画布渲染为默认视图的 Mesh 优先体验
+- AI 导师面板：学习提示、课程聚焦、掌握度追踪
+- 针对弱网环境下大型 GLB 资产的模型加载进度覆盖层
+- 尚无生产级 GLB 模型的标本提供程序化回退几何体
+- 细胞器详情面板、显微镜模式、标本元数据及对比工作流
+- 响应式桌面端、紧凑端与移动端布局，支持浏览器截图验证
 
-## Preview Modes
+## 预览模式
 
-| Mode | Purpose |
+| 模式 | 用途 |
 | --- | --- |
-| Mesh | Loads available GLB models or procedural Three.js geometry. |
-| Focus | Emphasizes selected organelles and supporting biological details. |
+| Mesh | 加载可用的 GLB 模型或程序化 Three.js 几何体 |
+| Focus | 聚焦选中细胞器，高亮显示并附带生物学细节 |
 
-## Tech Stack
+## 技术栈
 
-| Layer | Tools |
+| 层级 | 技术 |
 | --- | --- |
-| App | React 19, TypeScript, Vite |
-| 3D | Three.js, React Three Fiber, Drei |
-| UI | CSS modules in `src/styles.css`, Lucide icons |
-| Assets | GLB models, transparent PNG thumbnails, NIH previews |
-| Verification | Playwright Core, PNG pixel metrics |
+| 应用框架 | React 19、TypeScript、Vite |
+| 3D 渲染 | Three.js、React Three Fiber、Drei |
+| 界面样式 | CSS 模块（`src/styles.css`）、Lucide 图标 |
+| 素材资源 | GLB 模型、透明 PNG 缩略图、NIH 预览图 |
+| 验证工具 | Playwright Core、PNG 像素指标 |
 
-## Project Structure
+## 项目结构
 
 ```text
 .
@@ -69,78 +69,78 @@ An interactive cell architecture gallery built with React, Vite, Three.js, and s
     `-- styles.css
 ```
 
-## Getting Started
+## 快速开始
 
-Install dependencies:
+安装依赖：
 
 ```bash
 npm install
 ```
 
-Run the local development server:
+启动本地开发服务器：
 
 ```bash
 npm run dev
 ```
 
-Open the app:
+访问应用：
 
 ```text
 http://127.0.0.1:5173/
 ```
 
-Build for production:
+生产构建：
 
 ```bash
 npm run build
 ```
 
-Run visual verification:
+运行可视化验证：
 
 ```bash
 npm run verify
 ```
 
-## Asset Notes
+## 素材说明
 
-The highest fidelity specimens are loaded from `public/models/` and configured in `src/data/cells.ts`.
+最高保真度的标本从 `public/models/` 加载，在 `src/data/cells.ts` 中配置。
 
-| Specimen | Current asset |
+| 标本 | 当前资产 |
 | --- | --- |
-| Plant Cell | `public/models/plant-cell-first001.glb` |
-| White Blood Cell | `public/models/white-blood-cell-user.glb` |
-| Animal Cell | `public/models/animal-cell-nih.glb` |
-| Neuron | `public/models/neuron-nih.glb` |
-| Bacteria Wall | `public/models/bacteria-wall-nih.glb` |
+| 植物细胞 | `public/models/plant-cell-first001.glb` |
+| 白细胞 | `public/models/white-blood-cell-user.glb` |
+| 动物细胞 | `public/models/animal-cell-nih.glb` |
+| 神经元 | `public/models/neuron-nih.glb` |
+| 细菌壁 | `public/models/bacteria-wall-nih.glb` |
 
-Transparent PNG references in `public/cell-renders-transparent/` are used for thumbnails and model previews. Detailed provenance is tracked in `docs/ASSETS.md`.
+`public/cell-renders-transparent/` 中的透明 PNG 用于缩略图和模型预览。详细的素材来源记录在 `docs/ASSETS.md`。
 
-## Verification
+## 可视化验证
 
-`npm run verify` launches the local app, captures desktop, compact, mobile, and interaction screenshots, then checks canvas pixel metrics to catch blank renders or major layout regressions.
+`npm run verify` 启动本地应用，截取桌面端、紧凑端、移动端及交互截图，然后检查画布像素指标以捕获空白渲染或重大布局回归。
 
-Current coverage includes:
+当前覆盖范围：
 
-- Desktop, compact, and mobile smoke checks.
-- Plant Cell GLB render check.
-- White Blood Cell GLB render check.
-- Bacteria mesh interaction check.
-- Comparison modal check.
+- 桌面端、紧凑端与移动端冒烟测试
+- 植物细胞 GLB 渲染检查
+- 白细胞 GLB 渲染检查
+- 细菌 Mesh 交互检查
+- 对比弹窗检查
 
-## Roadmap
+## 路线图
 
-- Add production quality GLB models for the remaining specimens.
-- Add lazy loading and route level code splitting for 3D bundles.
-- Expand educational annotations for each organelle.
-- Add screenshot export and 3D export workflows.
-- Add asset license metadata directly into the UI.
+- 为其余标本添加生产级 GLB 模型
+- 添加懒加载与路由级代码拆分以优化 3D 资产加载
+- 扩展各细胞器的教育注释
+- 添加截图导出与 3D 导出工作流
+- 在界面中直接展示资产许可证元数据
 
-## License
+## 许可证
 
-The application code is licensed under the MIT License. Included GLB models and image assets retain their documented provenance in `docs/ASSETS.md`.
+应用代码基于 MIT 许可证发布。包含的 GLB 模型和图像资产保留其在 `docs/ASSETS.md` 中记录的原始来源许可。
 
-## Credits
+## 致谢
 
-Special thanks to the original creator [@DilumSanjaya](https://x.com/DilumSanjaya) for the source inspiration and visual direction.
+特别感谢原作者 [@DilumSanjaya](https://x.com/DilumSanjaya) 提供的灵感与视觉方向。
 
-Additional 3D model provenance is documented in `docs/ASSETS.md`.
+其余 3D 模型来源详见 `docs/ASSETS.md`。
